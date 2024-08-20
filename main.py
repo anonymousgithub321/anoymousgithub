@@ -1,4 +1,4 @@
-
+# The main code for CDRF4QF
 import math, os, pickle, random, sys, argparse
 from time import time
 from collections import defaultdict, Counter
@@ -354,36 +354,29 @@ class Params:
 
 # 处理user数据
 params = Params()
-data_handle_dir = '../data/mc20231006/'
-# train_list = pd.read_csv(data_handle_dir + "gametrain{}.csv".format(0), header=None, encoding='UTF-8')
-# valid_list = pd.read_csv(data_handle_dir + "gameprobe{}.csv".format(0), header=None, encoding='UTF-8')
-# critic_data = pd.read_csv(data_handle_dir + "game_critic_review.csv", header=0, encoding='UTF-8')
-# summary = pd.read_csv(data_handle_dir + "pretrainemb_gameinfo.csv", header=None, encoding='UTF-8').values
-# review = pd.read_csv(data_handle_dir + "pretrainemb_usergame.csv", header=None, encoding='UTF-8').values
-# critic_review = pd.read_csv(data_handle_dir + "pretrainemb_criticgame.csv", header=None, encoding='UTF-8').values
+data_handle_dir = 'data/'
 
 train_list = pd.read_csv(data_handle_dir + "movietrain{}.csv".format(0), header=None, encoding='UTF-8')
 valid_list = pd.read_csv(data_handle_dir + "movieprobe{}.csv".format(0), header=None, encoding='UTF-8')
+test_list = pd.read_csv(data_handle_dir + "movietest{}.csv".format(0), header=None, encoding='UTF-8')
 critic_data = pd.read_csv(data_handle_dir + "movie_critic_review.csv", header=0, encoding='UTF-8')
 summary = pd.read_csv(data_handle_dir + "pretrainemb_movieinfo.csv", header=None, encoding='UTF-8').values
 review = pd.read_csv(data_handle_dir + "pretrainemb_usermovie.csv", header=None, encoding='UTF-8').values
 critic_review = pd.read_csv(data_handle_dir + "pretrainemb_criticmovie.csv", header=None, encoding='UTF-8').values
 
-# train_list = pd.read_csv(data_handle_dir + "musictrain{}.csv".format(0), header=None, encoding='UTF-8')
-# valid_list = pd.read_csv(data_handle_dir + "musicprobe{}.csv".format(0), header=None, encoding='UTF-8')
-# critic_data = pd.read_csv(data_handle_dir + "music_critic_review.csv", header=0, encoding='UTF-8')
-# summary = pd.read_csv(data_handle_dir + "pretrainemb_musicinfo.csv", header=None, encoding='UTF-8').values
-# review = pd.read_csv(data_handle_dir + "pretrainemb_usermusic.csv", header=None, encoding='UTF-8').values
-# critic_review = pd.read_csv(data_handle_dir + "pretrainemb_criticmusic.csv", header=None, encoding='UTF-8').values
 
 train_list = train_list[[0, 1, 4, 2]].values
 valid_list = valid_list[[0, 1, 4, 2]].values
+test_list = test_list[[0, 1, 4, 2]].values
 params.n_users, params.n_items = np.max(np.concatenate((train_list, valid_list))[:, 0:2], axis=0) + 1
 valid_rating = (valid_list[:, 3].astype(np.float32))/np.max(valid_list[:, 3]).astype(np.float32)
+test_rating = (test_list[:, 3].astype(np.float32))/np.max(test_list[:, 3]).astype(np.float32)
 valid_list = valid_list[valid_rating >= 0.7, :]
+test_list = test_list[test_rating >= 0.7, :]
 train_rating = (train_list[:, 3].astype(np.float32))/np.max(train_list[:, 3]).astype(np.float32)
 train_matrix = sp.csr_matrix((train_rating, (train_list[:, 0], train_list[:, 1])), dtype='float32', shape=(params.n_users, params.n_items))
 valid_matrix = sp.csr_matrix((np.ones_like(valid_list[:, 0]), (valid_list[:, 0], valid_list[:, 1])), dtype='float32', shape=(params.n_users, params.n_items))
+test_matrix = sp.csr_matrix((np.ones_like(test_list[:, 0]), (test_list[:, 0], test_list[:, 1])), dtype='float32', shape=(params.n_users, params.n_items))
 
 user_pos_dict = csr_to_user_dict(train_matrix)
 item_user_dict = csr_to_user_dict(train_matrix.transpose())
